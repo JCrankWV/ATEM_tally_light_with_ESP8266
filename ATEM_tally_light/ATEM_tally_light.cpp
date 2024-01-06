@@ -140,7 +140,7 @@ CRGB color_led[8] = { CRGB::Black, CRGB::Red, CRGB::Lime, CRGB::Blue, CRGB::Yell
 //FastLED
 #ifndef TALLY_DATA_PIN
 #if ESP32
-#define TALLY_DATA_PIN    12
+#define TALLY_DATA_PIN    23
 #elif ARDUINO_ESP8266_NODEMCU
 #define TALLY_DATA_PIN    7
 #else
@@ -241,7 +241,7 @@ void setup() {
     //Initialize LED strip
     if (0 < settings.neopixelsAmount && settings.neopixelsAmount <= 1000) {
         leds = new CRGB[settings.neopixelsAmount];
-        FastLED.addLeds<NEOPIXEL, TALLY_DATA_PIN>(leds, settings.neopixelsAmount);
+        FastLED.addLeds<WS2811, TALLY_DATA_PIN, RGB>(leds, settings.neopixelsAmount);
 
         if (settings.neopixelStatusLEDOption != NEOPIXEL_STATUS_NONE) {
             numStatusLEDs = 1;
@@ -265,7 +265,7 @@ void setup() {
     }
 
     FastLED.setBrightness(settings.neopixelBrightness);
-    setSTRIP(LED_OFF);
+    setSTRIP(LED_BLUE);
     setStatusLED(LED_BLUE);
     FastLED.show();
 
@@ -350,6 +350,7 @@ void loop() {
                 WiFi.softAP((String)DISPLAY_NAME + " setup");
                 WiFi.mode(WIFI_AP_STA); // Enable softAP to access web interface in case of no WiFi
                 setBothLEDs(LED_WHITE);
+                setSTRIP(LED_WHITE);
                 setStatusLED(LED_WHITE);
             }
             break;
@@ -475,13 +476,13 @@ void changeState(uint8_t stateToChangeTo) {
             state = STATE_CONNECTING_TO_WIFI;
             setBothLEDs(LED_BLUE);
             setStatusLED(LED_BLUE);
-            setSTRIP(LED_OFF);
+            setSTRIP(LED_BLUE);
             break;
         case STATE_CONNECTING_TO_SWITCHER:
             state = STATE_CONNECTING_TO_SWITCHER;
             setBothLEDs(LED_PINK);
             setStatusLED(LED_PINK);
-            setSTRIP(LED_OFF);
+            setSTRIP(LED_PINK);
             break;
         case STATE_RUNNING:
             state = STATE_RUNNING;
@@ -685,7 +686,11 @@ int getLedColor(int tallyMode, int tallyNo) {
                && tallyMode != MODE_PROGRAM_ONLY) {     //and not program only
         return LED_GREEN;
     } else {                                            //if tally is neither
-        return LED_OFF;
+        if (state == STATE_CONNECTING_TO_SWITCHER) {
+          return LED_PINK;
+        } else {
+          return LED_OFF;
+        }
     }
 }
 
